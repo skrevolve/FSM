@@ -128,14 +128,17 @@ func (s *StateMachine) FireEvent(e Event) error {
 	return nil
 }
 
-func (s *StateMachine) Compute(events []string, printState bool) State {
+func (s *StateMachine) Compute(events []string, printState bool) (State, error) {
 	for _, e := range events {
-		s.FireEvent(Event(e))
+		err := s.FireEvent(Event(e))
+		if err != nil {
+			return State{}, err
+		}
 		if printState {
 			fmt.Printf("%s\n", s.PresentState.String())
 		}
 	}
-	return s.PresentState
+	return s.PresentState, nil
 }
 
 func main() {
@@ -144,7 +147,7 @@ func main() {
 	initState := stateMachine.Init("locked")
 	unlockedSate := stateMachine.NewState("unlocked")
 
-	coinRule := NewRule(Operator("eq"), Event("coin"))
+	coinRule := NewRule(Operator("eqs"), Event("coin"))
 	pushRule := NewRule(Operator("eq"), Event("push"))
 
 	stateMachine.LinkStates(initState, unlockedSate, coinRule)
